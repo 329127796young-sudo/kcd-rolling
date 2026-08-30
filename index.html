@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>墙洞酒馆 · 骰子对决</title>
+  <meta name="description" content="中世纪酒馆骰子博弈游戏原型。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Source+Han+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="game-shell">
+    <header class="game-header">
+      <div class="title-lockup">
+        <div class="title-mark" aria-hidden="true">
+          <svg viewBox="0 0 42 49"><path d="M7 5h28v17c0 10-5.6 17.2-14 22C12.6 39.2 7 32 7 22V5Z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 12h18M21 9v18M13 20h16" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="21" cy="30" r="3.2" fill="currentColor"/></svg>
+        </div>
+        <div><div class="title-cn">墙洞酒馆</div><div class="title-en">WALLHOLE TAVERN</div></div>
+      </div>
+      <nav class="header-nav" aria-label="游戏页面">
+        <button class="nav-item active" data-view="game" type="button"><span class="nav-glyph">♜</span>牌桌</button>
+        <button class="nav-item" data-view="rules" type="button"><span class="nav-glyph">✦</span>基本规则 <small>1/6</small></button>
+        <button class="nav-item" data-view="dice" type="button"><span class="nav-glyph">◈</span>骰子库 <small>3/6</small></button>
+      </nav>
+      <div class="header-actions">
+        <button class="session-toggle" id="mode-toggle" type="button"><i></i><span id="mode-label">本地练习</span></button>
+        <button class="header-icon" id="sound-toggle" aria-label="切换声音" title="切换声音" type="button">◖</button>
+        <button class="header-icon" id="rules-button" aria-label="打开规则" title="打开规则" type="button">?</button>
+        <span class="header-divider"></span>
+        <button class="profile" id="profile-button" type="button"><span class="profile-avatar">L</span><span>LIORA</span><b>⌄</b></button>
+      </div>
+    </header>
+
+    <section class="home-screen" id="home-screen" aria-label="主界面">
+      <div class="home-sigil" aria-hidden="true"><span></span><b>✦</b><span></span></div>
+      <p class="home-kicker">THE WALLHOLE TAVERN · DICE KEEP</p>
+      <h1>墙洞酒馆</h1>
+      <p class="home-lede">在木桌、烛火与骰声之间，<em>押上你的运气。</em></p>
+      <div class="home-tabs" role="tablist" aria-label="对局模式"><button class="home-tab active" data-home-mode="solo" type="button">单机对局 <small>LOCAL DUEL</small></button><button class="home-tab" data-home-mode="online" type="button">联机演示 <small>ROOM MATCH</small></button></div>
+      <section class="opponent-select" aria-label="选择对手"><div class="select-heading"><span>选择对手</span><small>不同旅人有不同的赌法与骰子组合</small></div><div class="opponent-cards" id="opponent-cards">
+        <button class="opponent-card selected" data-opponent="milo" type="button"><span class="opponent-portrait portrait-milo">M</span><span class="opponent-card-copy"><b>米洛 · 老练</b><small>稳健型 · 喜欢在第二掷收集</small><i>难度：老练</i></span><span class="card-check">✓</span></button>
+        <button class="opponent-card" data-opponent="vlad" type="button"><span class="opponent-portrait portrait-vlad">V</span><span class="opponent-card-copy"><b>瓦茨拉夫 · 赌徒</b><small>冒险型 · 追逐热骰与大顺</small><i>难度：鲁莽</i></span><span class="card-check">✓</span></button>
+        <button class="opponent-card" data-opponent="marta" type="button"><span class="opponent-portrait portrait-marta">M</span><span class="opponent-card-copy"><b>玛蒂娜 · 酒馆老板</b><small>防守型 · 只拿稳妥分数</small><i>难度：谨慎</i></span><span class="card-check">✓</span></button>
+      </div></section>
+      <div class="home-actions"><button class="home-primary" id="start-game" type="button"><span>进入牌桌</span><b>→</b></button><button class="home-secondary" id="home-loadout" type="button"><span>◈</span> 配置我的骰子</button></div>
+      <div class="home-footnote"><span><i></i> 酒馆在线</span><span>公平掷骰 · 目标分数 2000</span><span>v1.1 演示</span></div>
+    </section>
+
+    <main class="arena hidden">
+      <aside class="left-rail">
+        <div class="rail-heading"><span class="chapter-mark">I</span><div><span class="kicker">墙洞酒馆</span><h1>骰子对决</h1></div></div>
+        <div class="opponent-target"><span>先到目标分数者获胜</span><strong id="target-score">2000</strong></div>
+
+        <section class="score-ledger" aria-label="计分板">
+          <div class="ledger-row player-row"><div><span>已赢取点数</span><b>你 · LIORA</b></div><strong id="player-total">0</strong><small>/ 2000</small></div>
+        </section>
+
+        <section class="loadout-panel" aria-label="骰子装备组合">
+          <div class="section-label"><span>骰子装备组合</span><span class="section-actions"><button class="tiny-button" id="reset-loadout" type="button">还原普通骰</button><button class="tiny-button" id="open-dice-library" type="button">编辑组合</button></span></div>
+          <p class="loadout-note">六个槽位分别影响对应骰子的出现概率</p>
+          <div class="loadout-slots" id="loadout-slots"></div>
+        </section>
+
+        <div class="rail-note"><span class="note-icon">✧</span><p>“赌徒只需一次好掷，便能让整张桌子安静下来。”</p></div>
+        <div class="rail-footer"><span class="status-led"></span> 酒馆在线 <span>·</span> 2,184 位旅人</div>
+      </aside>
+
+      <section class="table-stage" aria-label="游戏牌桌">
+        <div class="scene-vignette"></div>
+        <div class="stage-toolbar"><button class="back-home-button" id="home-button" type="button">‹ 主界面</button><div class="turn-status"><span class="turn-dot"></span><b id="turn-label">你的回合</b><small id="turn-detail">选择任意骰子并保留</small></div><div class="round-count"><span>对局</span><strong id="round-number">01</strong><span>/ 09</span></div><div class="stage-toolbar-actions"><button class="restart-button" id="restart-button" type="button" title="重新开始">↻</button><button class="forfeit-button" id="forfeit-button" type="button">⚑ 离开牌桌</button></div></div>
+        <div class="three-board-wrap" id="three-board-wrap" aria-label="三维骰子层">
+          <canvas id="dice-physics-canvas" aria-hidden="true"></canvas>
+        </div>
+
+        <div class="dice-state" id="dice-state">投掷六枚骰子，点击 3D 骰子锁定任意点数</div>
+        <div class="roll-ritual" id="roll-ritual" aria-hidden="true"><span class="ritual-cup">♜</span><b>骰盅翻滚</b><small>听见点数落在木桌上的声音</small></div>
+        <div class="score-callout" id="score-callout"><span class="callout-symbol">◈</span><div><b id="combo-name">等待投掷</b><small id="combo-detail">1 点 = 100 · 5 点 = 50</small></div><strong id="selection-score">0</strong></div>
+
+        <div class="action-row">
+          <button class="roll-button" id="roll-button" type="button"><span class="roll-glyph">↻</span><span id="roll-label">投掷骰子</span><kbd>SPACE</kbd></button>
+          <button class="bank-button" id="bank-button" type="button" disabled><span>收集</span><strong id="bank-amount">0</strong><small>分</small></button>
+        </div>
+        <div class="stage-hint"><span id="remaining-dice">可投掷 6 枚</span><span class="hint-divider">·</span><span>点击 3D 骰子锁定</span><span class="hint-divider">·</span><span>爆骰会失去本轮分数</span></div>
+      </section>
+
+      <aside class="right-rail">
+        <div class="rail-heading opponent-heading"><div class="opponent-avatar">M</div><div><span class="kicker">对手</span><h2 id="opponent-name">米洛 · 老练</h2><small id="opponent-status">等待你的投掷</small></div><span class="online-dot"></span></div>
+        <div class="opponent-score"><span>已赢取点数</span><strong id="opponent-total-right">250</strong><small>/ 2000</small></div>
+
+        <section class="combination-guide"><div class="section-label"><span>点数组合</span><button class="tiny-button" id="guide-button" type="button">查看规则</button></div><div class="guide-row"><div class="mini-dice"><i>1</i></div><span>单骰</span><b>100</b></div><div class="guide-row"><div class="mini-dice"><i>5</i></div><span>单骰</span><b>50</b></div><div class="guide-row"><div class="mini-dice"><i>1</i><i>1</i><i>1</i></div><span>三同</span><b>1000</b></div><div class="guide-row"><div class="mini-dice"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div><span>小顺</span><b>750</b></div><div class="guide-row"><div class="mini-dice"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i></div><span>大顺</span><b>1500</b></div></section>
+
+        <section class="activity"><div class="section-label"><span>牌桌动态</span><span class="live-tag"><i></i> LIVE</span></div><div class="activity-list" id="activity-list"></div></section>
+        <div class="room-line"><span>牌桌编号</span><b id="room-code">WHT-731</b><button id="copy-room" aria-label="复制牌桌编号" title="复制牌桌编号" type="button">▣</button></div>
+      </aside>
+    </main>
+
+    <footer class="bottom-bar"><div><span class="keycap">LMB</span> 选择 3D 骰子 <span class="keycap">SPACE</span> 投掷</div><button class="bottom-link" id="reset-button" type="button">重新开始</button><span class="build">墙洞酒馆 · v1.0 演示</span></footer>
+  </div>
+
+  <div class="modal-backdrop hidden" id="modal-backdrop">
+    <section class="codex-modal" role="dialog" aria-modal="true" aria-labelledby="codex-title">
+      <button class="modal-close" id="modal-close" aria-label="关闭规则" type="button">×</button>
+      <div class="codex-topline"><span id="codex-kicker">骰子：基本规则</span><span id="codex-page">1 / 6</span></div>
+      <h2 id="codex-title">骰子：基本规则 <em>(1/6)</em></h2>
+      <div class="codex-content" id="codex-content"></div>
+      <div class="codex-footer"><button class="page-button" id="page-prev" type="button">‹ 上一页</button><div class="page-dots" id="page-dots"></div><button class="page-button" id="page-next" type="button">下一页 ›</button></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+  <script src="dice-physics.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
