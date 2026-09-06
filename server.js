@@ -23,6 +23,7 @@ const configuredDataDir = String(process.env.WHT_DATA_DIR || '').trim();
 const SERVER_DATA_DIR = path.resolve(configuredDataDir || path.join(ROOT, 'server-data'));
 const PLAYERS_FILE = path.join(SERVER_DATA_DIR, 'players.json');
 const ONLINE_PRACTICE_REWARD = 5;
+const MAX_AVATAR_DATA_LENGTH = 420000;
 const ALLOWED_ORIGINS = String(process.env.WHT_ALLOWED_ORIGINS || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -66,11 +67,18 @@ function safePlayerId(value) {
   return id || createId('guest-');
 }
 
+function safeAvatar(value) {
+  if (typeof value !== 'string' || value.length === 0 || value.length > MAX_AVATAR_DATA_LENGTH) return null;
+  if (!/^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/i.test(value)) return null;
+  return value;
+}
+
 function createDefaultProfile(playerId, name) {
   const now = new Date().toISOString();
   return {
     playerId,
     name: safeName(name),
+    avatar: null,
     groschen: 100,
     lifetimeEarned: 0,
     lifetimeSpent: 0,
@@ -103,6 +111,7 @@ function normalizeProfile(playerId, value, fallbackName = '旅人') {
     ...source,
     playerId,
     name: safeName(source.name || fallbackName),
+    avatar: safeAvatar(source.avatar),
     groschen: Number.isFinite(Number(source.groschen)) ? Math.max(0, Math.floor(Number(source.groschen))) : base.groschen,
     lifetimeEarned: Number.isFinite(Number(source.lifetimeEarned)) ? Math.max(0, Math.floor(Number(source.lifetimeEarned))) : base.lifetimeEarned,
     lifetimeSpent: Number.isFinite(Number(source.lifetimeSpent)) ? Math.max(0, Math.floor(Number(source.lifetimeSpent))) : base.lifetimeSpent,
@@ -167,6 +176,24 @@ function getOrCreateProfile(playerId, name) {
 function publicProfile(profile) {
   if (!profile) return null;
   return JSON.parse(JSON.stringify(normalizeProfile(profile.playerId, profile)));
+}
+
+// Only equipped cosmetic data is exposed to the other seat. Wallet balances,
+// ownership lists and settlement history remain private to the profile owner.
+function publicPlayerProfile(profile) {
+  if (!profile) return null;
+  const normalized = normalizeProfile(profile.playerId || '', profile, profile.name || '旅人');
+  return {
+    name: normalized.name,
+    avatar: normalized.avatar || null,
+    collection: {
+      equippedCard: normalized.collection.equippedCard || null,
+      equippedMedals: normalized.collection.equippedMedals.slice(0, 3)
+    },
+    diceSkinCollection: {
+      equippedSkin: normalized.diceSkinCollection.equippedSkin || 'default'
+    }
+  };
 }
 
 function settleRoom(room) {
@@ -237,6 +264,8 @@ function normalizeClientSnapshot(snapshot = {}) {
   const diceSkinCollection = snapshot.diceSkinCollection && typeof snapshot.diceSkinCollection === 'object' ? snapshot.diceSkinCollection : {};
   return {
     name: safeName(snapshot.name),
+    hasAvatar: Object.prototype.hasOwnProperty.call(snapshot, 'avatar'),
+    avatar: safeAvatar(snapshot.avatar),
     wallet: {
       groschen: Number.isFinite(Number(wallet.groschen)) ? Math.max(0, Math.floor(Number(wallet.groschen))) : null,
       lifetimeEarned: Number.isFinite(Number(wallet.lifetimeEarned)) ? Math.max(0, Math.floor(Number(wallet.lifetimeEarned))) : null,
@@ -255,6 +284,23 @@ function normalizeClientSnapshot(snapshot = {}) {
       equippedSkin: typeof diceSkinCollection.equippedSkin === 'string' ? diceSkinCollection.equippedSkin : 'default'
     }
   };
+}
+
+function syncRoomPlayerProfile(client) {
+  const room = client?.roomId ? rooms.get(client.roomId) : null;
+  if (!room || !client.profile) return;
+  const seat = findSeatForPlayer(room, client.playerId);
+  const player = seat >= 0 ? room.players[seat] : null;
+  if (!player) return;
+  player.name = client.profile.name;
+  player.profile = client.profile;
+  if (room.matchState?.players?.[seat]) {
+    room.matchState.players[seat].name = client.profile.name;
+    room.matchState.players[seat].profile = publicPlayerProfile(client.profile);
+  }
+  room.stateVersion += 1;
+  if (room.matchState) room.matchState.stateVersion = room.stateVersion;
+  broadcastRoom(room, 'room:state', { room: publicRoom(room) });
 }
 
 function isPristineProfile(profile) {
@@ -281,11 +327,13 @@ function syncProfileFromClient(client, snapshot) {
     profile.collection = normalizeProfile(profile.playerId, { collection: local.collection }).collection;
     profile.diceSkinCollection = normalizeProfile(profile.playerId, { diceSkinCollection: local.diceSkinCollection }).diceSkinCollection;
   }
+  if (local.hasAvatar) profile.avatar = local.avatar;
   profile.name = local.name || profile.name;
   profile.migratedAt = profile.migratedAt || now;
   profile.updatedAt = now;
   playerStore.players[profile.playerId] = profile;
   client.profile = profile;
+  syncRoomPlayerProfile(client);
   savePlayerStore();
   send(client, 'profile:state', { profile: publicProfile(profile), migrated: true, reason: String(snapshot?.syncReason || 'hello') });
 }
@@ -311,6 +359,7 @@ function profilePurchase(client, message) {
   profile.updatedAt = new Date().toISOString();
   playerStore.players[profile.playerId] = profile;
   client.profile = profile;
+  syncRoomPlayerProfile(client);
   savePlayerStore();
   send(client, 'wallet:update', { profile: publicProfile(profile), amount: -price, reason: 'purchase', itemType, itemId, price });
 }
@@ -330,6 +379,7 @@ function profileEquip(client, message) {
   profile.updatedAt = new Date().toISOString();
   playerStore.players[profile.playerId] = profile;
   client.profile = profile;
+  syncRoomPlayerProfile(client);
   savePlayerStore();
   send(client, 'profile:state', { profile: publicProfile(profile), reason: 'equip' });
 }
@@ -361,7 +411,8 @@ function roomSummary(room) {
 
 function publicPlayer(player) {
   if (!player) return null;
-  return { playerId: player.playerId, name: player.name, seat: player.seat, ready: player.ready, connected: Boolean(player.ws) };
+  const profile = player.profile || playerStore.players[player.playerId] || null;
+  return { playerId: player.playerId, name: player.name, seat: player.seat, ready: player.ready, connected: Boolean(player.ws), profile: publicPlayerProfile(profile) };
 }
 
 function publicRoom(room) {
@@ -441,6 +492,7 @@ function attachPlayer(room, client, seat, name) {
     seat,
     ready: false,
     loadout: rules.normalizeLoadout(client.loadout),
+    profile,
     ws: client,
     disconnectedAt: null
   };
@@ -469,6 +521,12 @@ function joinRoom(client, message) {
     client.roomId = room.id;
     client.seat = existingSeat;
     client.name = player.name;
+    player.profile = client.profile;
+    player.name = client.profile?.name || player.name;
+    // A reconnect can happen after the match has already started. Refresh the
+    // authoritative match seat as well, otherwise the opponent may keep the
+    // stale profile that was captured at match start.
+    syncRoomPlayerProfile(client);
     send(client, 'room:joined', { room: publicRoom(room), seat: existingSeat, reconnected: true });
     sendRoomState(client, room);
     broadcastRoom(room, 'room:state', { room: publicRoom(room) });
@@ -575,7 +633,13 @@ function handleMessage(client, message) {
     room.matchId = createId('match-');
     room.sequence = 0;
     room.settled = false;
-    room.matchState = rules.createMatchState(room.players.map((item) => ({ playerId: item.playerId, name: item.name, seat: item.seat, loadout: item.loadout })), room.matchType);
+    room.matchState = rules.createMatchState(room.players.map((item) => ({
+      playerId: item.playerId,
+      name: item.name,
+      seat: item.seat,
+      loadout: item.loadout,
+      profile: publicPlayerProfile(item.profile || playerStore.players[item.playerId])
+    })), room.matchType);
     room.stateVersion += 1;
     broadcastRoom(room, 'match:start', { room: publicRoom(room), matchId: room.matchId, state: rules.publicMatchState(room.matchState), serverTime: Date.now() });
     broadcastRoom(room, 'room:state', { room: publicRoom(room) });

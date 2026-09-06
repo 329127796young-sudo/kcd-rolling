@@ -277,6 +277,9 @@
         this.room = message.room;
         if (this.seat === null) this.seat = this.room.players.findIndex((player) => player?.playerId === readPlayerId());
         this.render();
+        if (this.room.phase === 'playing' && this.room.matchState) {
+          document.dispatchEvent(new CustomEvent('wht:online-room-state', { detail: { room: this.room, state: this.room.matchState, seat: this.seat } }));
+        }
         return;
       }
       if (message.type === 'match:start') {

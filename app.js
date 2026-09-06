@@ -94,7 +94,7 @@ const opponents = {
 };
 // 真人联机座位沿用同一套角色面板，只把对手资料替换为房间内的牌友。
 // 这样不会让现有 AI/牌桌样式出现空引用，同时保留头像、名片和动态栏位。
-opponents.remote = { name: '在线牌友', role: '联机牌友', short: '真人对手 · 服务器同步', style: '等待牌友行动', riskLabel: '真人', traits: ['实时对局', '服务器裁定', '可断线重连'], avatar: '米洛.jpg', status: '等待牌友行动', bankAt: 0, riskTolerance: .5, continuationWeight: 1, mistakeRate: 0, hotDiceBias: 0, comebackPressure: .5, comboBias: { straight: 0, triple: 0 }, raisePolicy: { baseAccept: .5, multiplier: {}, minAccept: .5 }, loadout: Array(7).fill('ordinary') };
+opponents.remote = { name: '在线牌友', role: '联机牌友', short: '真人对手 · 服务器同步', style: '等待牌友行动', riskLabel: '真人', traits: ['实时对局', '服务器裁定', '可断线重连'], avatar: null, status: '等待牌友行动', bankAt: 0, riskTolerance: .5, continuationWeight: 1, mistakeRate: 0, hotDiceBias: 0, comebackPressure: .5, comboBias: { straight: 0, triple: 0 }, raisePolicy: { baseAccept: .5, multiplier: {}, minAccept: .5 }, loadout: Array(7).fill('ordinary') };
 const DEFAULT_LOADOUT = Object.freeze(Array.from({ length: DICE_COUNT }, () => 'ordinary'));
 
 const COLLECTION_REWARDS = Object.freeze({
@@ -480,7 +480,7 @@ const state = {
   playerName: DEFAULT_PLAYER_NAME, playerAvatar: null, playerTotal: 0, opponentTotal: 0, playerRoundBank: 0, opponentRoundBank: 0, suddenDeath: false, roundScore: 0, rollScoreBase: 0, activeRollIndices: [], round: 1, mode: 'solo',
   dice: Array(DICE_COUNT).fill(0), locked: new Set(), hasRolled: false, rolling: false,
   turn: 'player', gameOver: false, room: 'WHT-731', equipSlot: 0,
-  onlineSeat: null, onlineMatchId: null, onlineStateVersion: 0, onlineProfile: null, onlineSettlement: null,
+  onlineSeat: null, onlineMatchId: null, onlineStateVersion: 0, onlineProfile: null, onlineRemoteProfile: null, onlineSettlement: null,
   loadout: [...DEFAULT_LOADOUT],
   opponentId: 'milo', opponentLoadout: opponents.milo.loadout, boardTheme: loadBoardTheme(),
   opponentDice: [], opponentActiveIndices: [], opponentKept: [], opponentKeptIndices: [],
@@ -507,7 +507,7 @@ const els = {
   bank: $('#bank-button'), bankAmount: $('#bank-amount'), playerTotal: $('#player-total'),
   opponentRight: $('#opponent-total-right'), roundNumber: $('#round-number'), roundTotal: $('#round-total'), remaining: $('#remaining-dice'), comboName: $('#combo-name'),
   comboDetail: $('#combo-detail'), selectionScore: $('#selection-score'), hotDiceCount: $('#hot-dice-count'), scoreGrowthFactor: $('#score-growth-factor'), turnLabel: $('#turn-label'), turnDetail: $('#turn-detail'), multiplierPanel: $('#multiplier-panel'), multiplierValue: $('#multiplier-value'), multiplierCap: $('#multiplier-cap'), multiplierHint: $('#multiplier-hint'), multiplierButtons: document.querySelectorAll('[data-multiplier]'), multiplierChallenge: $('#multiplier-challenge'), multiplierChallengeLabel: $('#multiplier-challenge-label'), multiplierChallengeValue: $('#multiplier-challenge-value'), multiplierChallengeCopy: $('#multiplier-challenge-copy'), multiplierAccept: $('#multiplier-accept'), multiplierDecline: $('#multiplier-decline'),
-  opponentName: $('#opponent-name'), opponentStatus: $('#opponent-status'), opponentAvatar: $('#opponent-avatar'), opponentRoleCopy: $('#opponent-role-copy'), opponentStyleCopy: $('#opponent-style-copy'), opponentRiskLabel: $('#opponent-risk-label'), opponentTraits: $('#opponent-traits'), opponentLoadoutSlots: $('#opponent-loadout-slots'), opponentState: $('#opponent-state'), opponentReaction: $('#opponent-reaction'), opponentRoundScore: $('#opponent-round-score'), opponentKeptCount: $('#opponent-kept-count'), opponentRemainingCount: $('#opponent-remaining-count'), opponentHotDiceCount: $('#opponent-hot-dice-count'), opponentProgress: $('#opponent-progress'), activity: $('#activity-list'),
+  opponentName: $('#opponent-name'), opponentStatus: $('#opponent-status'), opponentAvatar: $('#opponent-avatar'), opponentAvatarFallback: $('#opponent-avatar-fallback'), opponentIdentityKicker: $('#opponent-identity-kicker'), opponentCardDisplay: $('#opponent-card-display'), opponentMedalsDisplay: $('#opponent-medals-display'), opponentRoleCopy: $('#opponent-role-copy'), opponentStyleCopy: $('#opponent-style-copy'), opponentRiskLabel: $('#opponent-risk-label'), opponentTraits: $('#opponent-traits'), opponentLoadoutSlots: $('#opponent-loadout-slots'), opponentLoadoutPanel: document.querySelector('.opponent-loadout-panel'), opponentTraitsPanel: document.querySelector('.opponent-role-panel .role-traits'), opponentRolePanel: document.querySelector('.opponent-role-panel'), opponentState: $('#opponent-state'), opponentReactionLabel: $('#opponent-reaction-label'), opponentReaction: $('#opponent-reaction'), opponentRoundScore: $('#opponent-round-score'), opponentKeptCount: $('#opponent-kept-count'), opponentRemainingCount: $('#opponent-remaining-count'), opponentHotDiceCount: $('#opponent-hot-dice-count'), opponentProgress: $('#opponent-progress'), activity: $('#activity-list'),
   playerBoardTurn: $('#player-board-turn'), playerState: $('#player-state'), playerModeCopy: $('#player-mode-copy'), playerCardDisplay: $('#player-card-display'), playerMedalsDisplay: $('#player-medals-display'), playerRoundScore: $('#player-round-score'), playerKeptCount: $('#player-kept-count'), playerRemainingCount: $('#player-remaining-count'), playerHotDiceCount: $('#player-hot-dice-count'), playerProgress: $('#player-progress'),
   room: $('#room-code'), toast: $('#toast'), modeToggle: $('#mode-toggle'), modeLabel: $('#mode-label'),
   loadoutSlots: $('#loadout-slots'), restoreLoadout: $('#reset-loadout'),
@@ -837,6 +837,7 @@ async function handlePlayerAvatarUpload(event) {
   try {
     state.playerAvatar = await fileToPlayerAvatar(file);
     savePlayerProfile();
+    syncSharedProfile('local-change');
     renderPlayerNameUI();
     renderPlayerCollection();
     if (!els.detailModal?.classList.contains('hidden')) renderDetailModal('player');
@@ -849,6 +850,7 @@ async function handlePlayerAvatarUpload(event) {
 function resetPlayerAvatar() {
   state.playerAvatar = null;
   savePlayerProfile();
+  syncSharedProfile('local-change');
   renderPlayerNameUI();
   renderPlayerCollection();
   if (!els.detailModal?.classList.contains('hidden')) renderDetailModal('player');
@@ -890,6 +892,10 @@ function applyOnlineProfile(profile, settlement = null, forceWallet = false) {
       purchasedSkins: Array.from(new Set(Array.isArray(profile.diceSkinCollection.purchasedSkins) ? profile.diceSkinCollection.purchasedSkins : [])),
       equippedSkin: typeof profile.diceSkinCollection.equippedSkin === 'string' ? profile.diceSkinCollection.equippedSkin : 'default'
     };
+  }
+  if (Object.prototype.hasOwnProperty.call(profile, 'avatar')) {
+    state.playerAvatar = normalizePlayerAvatar(profile.avatar);
+    savePlayerProfile();
   }
   state.playerName = String(profile.name || state.playerName || DEFAULT_PLAYER_NAME).slice(0, MAX_PLAYER_NAME_LENGTH);
   saveWallet(); saveCollection(); saveDiceSkinCollection();
@@ -1346,15 +1352,77 @@ function renderOpponentLoadout(profile) {
   }).join('');
 }
 
+function remoteCollectionItem(type, file) {
+  if (typeof file !== 'string' || !file) return null;
+  return collectionItems(type).find((item) => item.file === file) || null;
+}
+
+function onlineOpponentViewProfile() {
+  const remote = state.onlineRemoteProfile && typeof state.onlineRemoteProfile === 'object' ? state.onlineRemoteProfile : {};
+  const name = String(remote.name || opponents.remote.name || '在线牌友').trim() || '在线牌友';
+  opponents.remote.name = name;
+  return {
+    name,
+    avatar: typeof remote.avatar === 'string' ? remote.avatar : null,
+    role: '真人牌友',
+    short: '真人牌友 · 独立档案',
+    style: '由另一位玩家实时操作。',
+    riskLabel: '真人',
+    traits: ['独立档案', '实时对局', '服务器裁定'],
+    status: '等待牌友操作',
+    loadout: Array(7).fill('ordinary'),
+    collection: remote.collection && typeof remote.collection === 'object' ? remote.collection : {},
+    diceSkinCollection: remote.diceSkinCollection && typeof remote.diceSkinCollection === 'object' ? remote.diceSkinCollection : {}
+  };
+}
+
+function renderOpponentCosmetics(profile, isRemote) {
+  if (!els.opponentCardDisplay || !els.opponentMedalsDisplay) return;
+  if (!isRemote) {
+    els.opponentCardDisplay.innerHTML = '';
+    els.opponentMedalsDisplay.innerHTML = '';
+    els.opponentMedalsDisplay.classList.remove('is-visible');
+    return;
+  }
+  const cardFile = remoteCollectionItem('cards', profile.collection?.equippedCard)?.file || null;
+  els.opponentCardDisplay.innerHTML = cardFile
+    ? `<div class="opponent-card-art"><img src="${collectionAsset('cards', cardFile)}" alt="${escapeHtml(profile.name)}已装备名片" /></div>`
+    : '<div class="opponent-card-empty">未装备名片</div>';
+  const medalFiles = Array.isArray(profile.collection?.equippedMedals) ? profile.collection.equippedMedals.slice(0, 3) : [];
+  els.opponentMedalsDisplay.innerHTML = Array.from({ length: 3 }, (_, index) => {
+    const medalFile = remoteCollectionItem('medals', medalFiles[index])?.file || null;
+    return medalFile
+      ? `<span class="opponent-medal-slot"><img src="${collectionAsset('medals', medalFile)}" alt="已装备勋章" /></span>`
+      : '<span class="opponent-medal-slot empty">＋</span>';
+  }).join('');
+  els.opponentMedalsDisplay.classList.add('is-visible');
+}
+
 function renderRolePanels() {
-  const profile = opponents[state.opponentId] || opponents.milo;
-  if (els.opponentAvatar) { els.opponentAvatar.src = profile.avatar; els.opponentAvatar.alt = `${profile.name}头像`; }
+  const isRemote = state.opponentId === 'remote';
+  const profile = isRemote ? onlineOpponentViewProfile() : (opponents[state.opponentId] || opponents.milo);
+  els.opponentRolePanel?.classList.toggle('is-online-player', isRemote);
+  if (els.opponentAvatar) {
+    const avatar = profile.avatar;
+    els.opponentAvatar.hidden = !avatar;
+    if (avatar) els.opponentAvatar.src = avatar; else els.opponentAvatar.removeAttribute('src');
+    els.opponentAvatar.alt = `${profile.name}头像`;
+  }
+  if (els.opponentAvatarFallback) {
+    els.opponentAvatarFallback.textContent = Array.from(profile.name || 'O')[0] || 'O';
+    els.opponentAvatarFallback.classList.toggle('is-visible', isRemote && !profile.avatar);
+  }
   if (els.opponentName) els.opponentName.textContent = profile.name;
-  if (els.opponentRoleCopy) els.opponentRoleCopy.textContent = `${profile.short.split(' · ')[0]} · ${profile.role}`;
+  if (els.opponentIdentityKicker) els.opponentIdentityKicker.textContent = isRemote ? '对手 · 真人牌友' : '对手 · AI 旅人';
+  if (els.opponentRoleCopy) els.opponentRoleCopy.textContent = isRemote ? '真人牌友 · 独立档案' : `${profile.short.split(' · ')[0]} · ${profile.role}`;
   if (els.opponentStyleCopy) els.opponentStyleCopy.textContent = profile.style;
+  if (els.opponentReactionLabel) els.opponentReactionLabel.textContent = isRemote ? '牌友动态' : 'AI 反应';
+  if (els.opponentReaction && isRemote && ['先看看你的起手。', ''].includes(els.opponentReaction.textContent.trim())) els.opponentReaction.textContent = '等待牌友操作。';
   if (els.opponentRiskLabel) els.opponentRiskLabel.textContent = profile.riskLabel;
   if (els.opponentTraits) els.opponentTraits.innerHTML = profile.traits.map((trait) => `<span>${trait}</span>`).join('');
-  renderOpponentLoadout(profile);
+  renderOpponentCosmetics(profile, isRemote);
+  els.opponentLoadoutPanel?.classList.toggle('hidden', isRemote);
+  els.opponentTraitsPanel?.classList.toggle('hidden', isRemote);
   renderPlayerCollection();
 }
 
@@ -1385,7 +1453,13 @@ function renderPlayerCollection() {
 function addOpponentReaction(message, time = 'AI 反应') {
   if (els.opponentReaction) els.opponentReaction.textContent = message;
   const name = (opponents[state.opponentId]?.name || '对手').split(' · ')[0];
-  addActivity('ai reaction', `<b>${name}</b> <span class="reaction-copy">“${message}”</span>`, time);
+  const isRemote = state.opponentId === 'remote';
+  const label = isRemote ? '牌友动态' : time;
+  addActivity(`${isRemote ? 'remote' : 'ai'} reaction`, `<b>${name}</b> <span class="reaction-copy">“${message}”</span>`, label);
+}
+
+function opponentActivityType() {
+  return state.opponentId === 'remote' ? 'remote' : 'ai';
 }
 
 // ---------------------------------------------------------------------------
@@ -3426,7 +3500,7 @@ function resetGame(announce = true) {
   els.activity.innerHTML = '';
   els.playerTotal.textContent = state.playerTotal;
   els.opponentRight.textContent = state.opponentTotal;
-  addActivity('ai', `<b>${profile.name}</b> 把骰盅推到桌边，等你先手`, '刚才');
+  addActivity(opponentActivityType(), `<b>${profile.name}</b> 把骰盅推到桌边，等你先手`, '刚才');
   addActivity('you', '<b>你</b> 坐上墙洞酒馆牌桌', '刚才');
   renderDice();
   renderOpponentDice();
@@ -3521,6 +3595,12 @@ function applyOnlineSnapshot(snapshot) {
   const local = snapshot.players[state.onlineSeat];
   const remote = snapshot.players.find((player) => player && player.seat !== state.onlineSeat);
   if (!local || !remote) return false;
+  if (remote.profile && typeof remote.profile === 'object') {
+    state.onlineRemoteProfile = remote.profile;
+    opponents.remote.name = String(remote.profile.name || remote.name || '在线牌友');
+  } else if (!state.onlineRemoteProfile) {
+    state.onlineRemoteProfile = { name: remote.name || '在线牌友', avatar: null, collection: { equippedCard: null, equippedMedals: [] }, diceSkinCollection: { equippedSkin: 'default' } };
+  }
   syncOnlineDiceVisuals(local, remote);
   state.mode = 'online';
   state.onlineStateVersion = Number(snapshot.stateVersion) || state.onlineStateVersion || 0;
@@ -3590,10 +3670,10 @@ function animateOnlineRoll(detail) {
     safeAudio('playLand');
     flashBoardLight('land');
     const label = ownerIsPlayer ? '你' : (opponents.remote?.name || '在线牌友');
-    addActivity(ownerIsPlayer ? 'you' : 'ai', `<b>${label}</b> 掷出 ${values.join(' · ')} 点`, ownerIsPlayer ? '刚才' : '对手投掷');
+    addActivity(ownerIsPlayer ? 'you' : opponentActivityType(), `<b>${label}</b> 掷出 ${values.join(' · ')} 点`, ownerIsPlayer ? '刚才' : '对手投掷');
     if (event.type === 'farkle') {
       safeAudio('playFarkle');
-      addActivity(ownerIsPlayer ? 'ai' : 'you', `<b>${ownerIsPlayer ? '爆骰' : '对手爆骰'}</b> · 本轮暂存分数归零`, '本轮结束');
+      addActivity(ownerIsPlayer ? 'you' : opponentActivityType(), `<b>${ownerIsPlayer ? '爆骰' : '对手爆骰'}</b> · 本轮暂存分数归零`, '本轮结束');
       showToast(ownerIsPlayer ? '爆骰！本轮分数归零' : '在线牌友爆骰 · 轮到你');
       // A farkle also resets the server seat immediately.  Clear the visual
       // pool after the reveal so the failed throw does not remain as a stale
@@ -3627,7 +3707,7 @@ function handleOnlineGameEvent(detail) {
     const next = ownerIsPlayer ? state.locked : new Set(state.opponentKeptIndices);
     next.forEach((index) => { if (!previous.has(index)) { dicePhysics3D.setLocked?.(ownerIsPlayer ? 'player' : 'opponent', index, true, ownerIsPlayer ? state.dice[index] : state.opponentDice[index]); if (ownerIsPlayer) safeAudio('playDiceSelect'); } });
     previous.forEach((index) => { if (!next.has(index)) { dicePhysics3D.setLocked?.(ownerIsPlayer ? 'player' : 'opponent', index, false, ownerIsPlayer ? state.dice[index] : state.opponentDice[index]); if (ownerIsPlayer) safeAudio('playDiceUnselect'); } });
-    addActivity(ownerIsPlayer ? 'you' : 'ai', `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> ${ownerIsPlayer ? '调整了锁定骰子' : '保留了骰子'} · 本轮 ${event.turnScore || 0} 分`, '对局操作');
+    addActivity(ownerIsPlayer ? 'you' : opponentActivityType(), `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> ${ownerIsPlayer ? '调整了锁定骰子' : '保留了骰子'} · 本轮 ${event.turnScore || 0} 分`, '对局操作');
     updateUI();
     return;
   }
@@ -3641,15 +3721,15 @@ function handleOnlineGameEvent(detail) {
     spawnScoreFloat(amount, ownerIsPlayer ? els.playerTotal : els.opponentRight, 'gain', { tier: 'bank', owner: ownerIsPlayer ? 'player' : 'opponent', label: ownerIsPlayer ? '本轮收分' : '对手收分' });
     safeAudio('playBank', amount);
     celebrateStage();
-    addActivity(ownerIsPlayer ? 'you' : 'ai', `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> 收集了 <strong>${amount}</strong> 分`, '本轮结算');
+    addActivity(ownerIsPlayer ? 'you' : opponentActivityType(), `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> 收集了 <strong>${amount}</strong> 分`, '本轮结算');
   } else if (event.type === 'multiplier:pending') {
     openRaiseOfferModal();
     const requested = event.pendingRaise?.to || detail.state.pendingRaise?.to || 1;
-    addActivity(ownerIsPlayer ? 'you' : 'ai', `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> 提议牌桌倍率 <strong>x${requested}</strong>`, '倍率申请');
+    addActivity(ownerIsPlayer ? 'you' : opponentActivityType(), `<b>${ownerIsPlayer ? '你' : opponents.remote.name}</b> 提议牌桌倍率 <strong>x${requested}</strong>`, '倍率申请');
     showToast(ownerIsPlayer ? `已提出 x${requested} · 等待牌友回应` : `${opponents.remote.name} 提出 x${requested} · 请接受或拒绝`);
   } else if (event.type === 'multiplier:accepted') {
     safeAudio('playClick');
-    addActivity('ai', `<b>牌桌</b> 已确认 x${detail.state.multiplier} · 双方同步`, '倍率确认');
+    addActivity(opponentActivityType(), `<b>牌桌</b> 已确认 x${detail.state.multiplier} · 双方同步`, '倍率确认');
     showToast(`牌桌倍率已确认 x${detail.state.multiplier}`);
   } else if (event.type === 'multiplier:declined') {
     showToast(ownerIsPlayer ? '牌友拒绝加码 · 你赢下这局' : '你拒绝了加码 · 对手赢下这局');
@@ -3683,7 +3763,7 @@ function finishOnlineMatch(winnerSeat, settlement = null) {
   const reward = winnerIsPlayer && state.onlineSettlement?.balanceChanged ? Number(state.onlineSettlement.reward) || 0 : 0;
   const endingCopy = reward > 0 ? ` · 服务器奖励 +${reward} 格罗申` : state.onlineSettlement?.message ? ` · ${state.onlineSettlement.message}` : '';
   showToast(`联机对局结束 · ${name} 获胜${endingCopy}`);
-  addActivity(winnerIsPlayer ? 'you' : 'ai', `<b>${name}</b> 赢下联机牌桌`, '牌局结束');
+  addActivity(winnerIsPlayer ? 'you' : opponentActivityType(), `<b>${name}</b> 赢下联机牌桌`, '牌局结束');
 }
 
 function enterOnlineMatch(detail) {
@@ -3692,6 +3772,7 @@ function enterOnlineMatch(detail) {
   if (!room || !Array.isArray(room.players) || seat < 0) return;
   const remote = room.players.find((player) => player && Number(player.seat) !== seat);
   opponents.remote.name = remote?.name || '在线牌友';
+  state.onlineRemoteProfile = remote?.profile || { name: opponents.remote.name, avatar: null, collection: { equippedCard: null, equippedMedals: [] }, diceSkinCollection: { equippedSkin: 'default' } };
   state.mode = 'online';
   state.onlineSeat = seat;
   state.onlineMatchId = detail.matchId || room.matchId || null;
@@ -3742,6 +3823,19 @@ document.addEventListener('wht:online-profile', (event) => {
   }
 });
 
+document.addEventListener('wht:online-room-state', (event) => {
+  if (!isOnlineMatch()) return;
+  const detail = event.detail || {};
+  const seat = Number.isInteger(Number(state.onlineSeat)) ? Number(state.onlineSeat) : Number(detail.seat);
+  const remoteRoomPlayer = detail.room?.players?.find((player) => player && Number(player.seat) !== seat);
+  const remoteStatePlayer = detail.state?.players?.find((player) => player && Number(player.seat) !== seat);
+  const profile = remoteRoomPlayer?.profile || remoteStatePlayer?.profile;
+  if (!profile) return;
+  state.onlineRemoteProfile = profile;
+  opponents.remote.name = String(profile.name || remoteRoomPlayer?.name || '在线牌友');
+  renderRolePanels();
+});
+
 document.addEventListener('wht:online-game-event', (event) => handleOnlineGameEvent(event.detail || {}));
 document.addEventListener('wht:online-error', (event) => {
   const detail = event.detail || {};
@@ -3790,7 +3884,9 @@ function renderOpponentModal() {
     button.classList.toggle('active', active);
     button.setAttribute('aria-selected', String(active));
   });
-  els.opponentModalCards.innerHTML = Object.entries(opponents).map(([id, profile]) => {
+  // The online seat is populated only after a room has a real second player;
+  // never expose the runtime placeholder as a selectable single-player AI.
+  els.opponentModalCards.innerHTML = Object.entries(opponents).filter(([id]) => id !== 'remote').map(([id, profile]) => {
     const selected = id === selectedId;
     const stake = OPPONENT_STAKES[id] || 0;
     const priceCopy = type === 'stake'
@@ -3873,6 +3969,7 @@ function renderDetailModal(kind = 'opponent') {
     const commitPlayerName = () => {
       state.playerName = normalizePlayerName(nameInput?.value);
       savePlayerName();
+      syncSharedProfile('local-change');
       renderPlayerNameUI();
       renderPlayerCollection();
       renderDetailModal('player');
@@ -3892,6 +3989,18 @@ function renderDetailModal(kind = 'opponent') {
     const tableRulesNote = els.detailModalContent.querySelector('.detail-rules-callout small');
     if (tableRulesNote) tableRulesNote.textContent = '点数、顺子、倍率、爆骰与热骰规则保留在规则册中。';
     els.detailModalContent.querySelector('#detail-open-rules')?.addEventListener('click', () => { closeDetailModal(); openCodex(0); });
+    return;
+  }
+  if (state.opponentId === 'remote') {
+    const profile = onlineOpponentViewProfile();
+    const avatar = normalizePlayerAvatar(profile.avatar);
+    const initial = escapeHtml(Array.from(profile.name || 'O')[0] || 'O');
+    const cardFile = remoteCollectionItem('cards', profile.collection?.equippedCard)?.file || null;
+    const medals = Array.isArray(profile.collection?.equippedMedals) ? profile.collection.equippedMedals.slice(0, 3) : [];
+    els.detailModalKicker.textContent = 'PLAYER PROFILE';
+    els.detailModalTitle.textContent = profile.name;
+    els.detailModalSubtitle.textContent = '真人牌友 · 独立档案 · 由另一位玩家操作';
+    els.detailModalContent.innerHTML = `<div class="detail-profile-line"><div class="detail-avatar opponent-avatar">${avatar ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(profile.name)}头像" />` : `<span>${initial}</span>`}</div><div><b>${escapeHtml(profile.name)}</b><small>真人联机 · 服务器同步</small></div><span class="role-chip">真人</span></div><div class="detail-section"><div class="detail-section-title">已装备名片</div>${cardFile ? `<img class="detail-card-art" src="${collectionAsset('cards', cardFile)}" alt="${escapeHtml(profile.name)}已装备名片" />` : '<div class="detail-empty">尚未装备名片</div>'}</div><div class="detail-section"><div class="detail-section-title">已装备勋章</div><div class="detail-medal-row">${Array.from({ length: 3 }, (_, index) => { const medalFile = remoteCollectionItem('medals', medals[index])?.file || null; return medalFile ? `<img src="${collectionAsset('medals', medalFile)}" alt="已装备勋章" />` : '<span>空槽</span>'; }).join('')}</div></div>`;
     return;
   }
   const profile = opponents[state.opponentId] || opponents.milo;
@@ -4046,6 +4155,7 @@ function showHome() {
     state.onlineSeat = null;
     state.onlineMatchId = null;
     state.onlineStateVersion = 0;
+    state.onlineRemoteProfile = null;
     state.onlineSettlement = null;
     if (els.modeLabel) els.modeLabel.textContent = '本地练习';
     if (els.modeToggle) { els.modeToggle.querySelector('i').style.background = '#83a969'; els.modeToggle.setAttribute('aria-pressed', 'false'); }
@@ -4147,6 +4257,7 @@ window.WallholeGame = {
   getPlayerProfile: () => ({ name: state.playerName, avatar: state.playerAvatar }),
   getProfileSnapshot: () => ({
     name: state.playerName,
+    avatar: state.playerAvatar,
     wallet: state.wallet ? { groschen: state.wallet.groschen, lifetimeEarned: state.wallet.lifetimeEarned, lifetimeSpent: state.wallet.lifetimeSpent } : null,
     collection: state.collection ? JSON.parse(JSON.stringify(state.collection)) : null,
     diceSkinCollection: state.diceSkinCollection ? JSON.parse(JSON.stringify(state.diceSkinCollection)) : null

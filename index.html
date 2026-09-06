@@ -158,13 +158,14 @@
       <aside class="right-rail role-rail opponent-role-panel" aria-label="对手对局角色面板">
         <div class="role-panel-shell">
           <div class="role-panel-head opponent-heading">
-            <div class="role-avatar opponent-avatar"><img id="opponent-avatar" src="米洛.jpg" alt="米洛头像" /><span class="avatar-fallback">M</span></div>
-            <div class="role-identity"><span class="kicker">对手 · AI 旅人</span><h2 id="opponent-name">米洛 · 老练</h2><small id="opponent-status">等待你的投掷</small></div>
+            <div class="role-avatar opponent-avatar"><img id="opponent-avatar" src="米洛.jpg" alt="米洛头像" /><span class="avatar-fallback" id="opponent-avatar-fallback">M</span></div>
+            <div class="role-identity"><span class="kicker" id="opponent-identity-kicker">对手 · AI 旅人</span><h2 id="opponent-name">米洛 · 老练</h2><div class="opponent-card-display" id="opponent-card-display" aria-label="对手已装备名片"></div><small id="opponent-status">等待你的投掷</small></div>
             <button class="role-detail-button" id="open-opponent-details" type="button">详情</button>
             <span class="role-state" id="opponent-state">观战中</span><span class="online-dot"></span>
           </div>
           <div class="role-meta"><span id="opponent-role-copy">稳健型 · 老练</span><span id="opponent-style-copy">偶有失手</span></div>
-          <div class="ai-reaction-line" aria-live="polite"><span>AI 反应</span><em id="opponent-reaction">先看看你的起手。</em></div>
+          <div class="opponent-medals-display" id="opponent-medals-display" aria-label="对手已装备勋章"></div>
+          <div class="ai-reaction-line" aria-live="polite"><span id="opponent-reaction-label">AI 反应</span><em id="opponent-reaction">先看看你的起手。</em></div>
 
           <section class="role-score-block opponent-score-block" aria-label="对手分数">
             <div class="role-score-line"><span>累计得分</span><strong id="opponent-total-right">0</strong></div>
