@@ -124,7 +124,7 @@ const OIL_PAINT_DLC_CARDS = Object.freeze([
 ]);
 const OIL_PAINT_DLC_FILES = new Set(OIL_PAINT_DLC_CARDS.map((card) => card.file));
 const OPPONENT_STAKES = Object.freeze({ milo: 10, vlad: 50, marta: 100, musa: 300 });
-const PRACTICE_REWARDS = Object.freeze({ milo: 5, vlad: 10, marta: 15, musa: 20 });
+const PRACTICE_REWARDS = Object.freeze({ milo: 5, vlad: 25, marta: 50, musa: 150 });
 const LOTTERY_DRAW_COST = 600;
 const LOTTERY_RARITY_WEIGHTS = Object.freeze({ common: 51, rare: 30, epic: 15, legendary: 3, mythic: 1 });
 const LOTTERY_STORAGE_KEY = 'wallhole-lottery-v1';
@@ -1945,7 +1945,7 @@ const pages = [
   { kicker: '骰子：牌桌提示', title: '骰子：牌桌提示', content: `<div class="codex-copy"><h3>旅人的三条忠告</h3><p>一、先保留稳定的 1 和 5，再考虑高风险的三同与顺子。</p><p>二、当本轮分数已经领先时，及时收集，不要把胜点交给下一掷。</p><p>三、装备骰子会改变概率。打开骰子库，查看每一面真实的出现机会。</p></div>` }
 ];
 
-pages.push({ kicker: '牌桌：倍率与承担', title: '牌桌：倍率与承担', content: `<div class="codex-columns"><div class="codex-copy"><h3>提议、回应、共同承担</h3><p>正式赌局使用公共牌桌倍率：x1、x2、x3、x5。任一方只能在自己本回合第一次投掷前，向对手提议下一档倍率；同一回合每方最多提议一次。</p><h4>接受加码</h4><p>对手接受后，公共倍率和分数成长倍率同步切换到新档位，双方从这一刻起都按同一个倍率结算；最高倍率为 x5。</p><h4>拒绝加码</h4><p>拒绝不是继续观望，而是立即认输离场。提议方赢下牌局，并按加码前的旧倍率结算。</p><p>进入正式赌局前，需要准备基础赌注的 5 倍作为最高风险储备。练习桌固定 x1 且不收取赌注；依次战胜米洛、瓦茨拉夫、玛蒂娜、穆萨，可获得 5、10、15、20 格罗申。</p></div><div class="codex-illustration"><div class="codex-score">x1 <span>→ x2 → x3 → x5</span></div><div class="codex-caption">接受后双方共用新倍率 · 拒绝即认输</div></div></div>` });
+pages.push({ kicker: '牌桌：倍率与承担', title: '牌桌：倍率与承担', content: `<div class="codex-columns"><div class="codex-copy"><h3>提议、回应、共同承担</h3><p>正式赌局使用公共牌桌倍率：x1、x2、x3、x5。任一方只能在自己本回合第一次投掷前，向对手提议下一档倍率；同一回合每方最多提议一次。</p><h4>接受加码</h4><p>对手接受后，公共倍率和分数成长倍率同步切换到新档位，双方从这一刻起都按同一个倍率结算；最高倍率为 x5。</p><h4>拒绝加码</h4><p>拒绝不是继续观望，而是立即认输离场。提议方赢下牌局，并按加码前的旧倍率结算。</p><p>进入正式赌局前，需要准备基础赌注的 5 倍作为最高风险储备。练习桌固定 x1 且不收取赌注；依次战胜米洛、瓦茨拉夫、玛蒂娜、穆萨，可获得 5、25、50、150 格罗申。</p></div><div class="codex-illustration"><div class="codex-score">x1 <span>→ x2 → x3 → x5</span></div><div class="codex-caption">接受后双方共用新倍率 · 拒绝即认输</div></div></div>` });
 pages[1].content = pages[1].content
   .replace('<tr><td>小顺 1–5 / 2–6</td><td>750</td><td>连续五个点数</td></tr>', '<tr><td>小顺 1–5</td><td>500</td><td>连续五个点数</td></tr><tr><td>小顺 2–6</td><td>750</td><td>连续五个点数</td></tr>')
   .replace('<tr><td>三对</td><td>1500</td><td>三组相同点数</td></tr>', '');
