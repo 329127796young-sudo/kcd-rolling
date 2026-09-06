@@ -19,6 +19,7 @@ const PORT = Number(process.env.PORT || process.env.WHT_PORT) || 4173;
 const HOST = String(process.env.WHT_HOST || (hasPlatformPort ? '0.0.0.0' : '127.0.0.1'));
 const ROOM_TTL_MS = 30 * 60 * 1000;
 const DISCONNECTED_GRACE_MS = 2 * 60 * 1000;
+const MAX_WS_MESSAGE_BYTES = 1024 * 1024;
 const configuredDataDir = String(process.env.WHT_DATA_DIR || '').trim();
 const SERVER_DATA_DIR = path.resolve(configuredDataDir || path.join(ROOT, 'server-data'));
 const PLAYERS_FILE = path.join(SERVER_DATA_DIR, 'players.json');
@@ -703,11 +704,20 @@ function encodeFrame(text) {
   return Buffer.concat([Buffer.from(header), payload]);
 }
 
+function handleTextMessage(client, payload) {
+  try {
+    handleMessage(client, JSON.parse(payload.toString('utf8')));
+  } catch (error) {
+    send(client, 'error', { code: 'BAD_MESSAGE', message: error.message || '消息格式错误。' });
+  }
+}
+
 function decodeFrames(client, data) {
   client.buffer = Buffer.concat([client.buffer, data]);
   while (client.buffer.length >= 2) {
     const first = client.buffer[0];
     const second = client.buffer[1];
+    const fin = Boolean(first & 0x80);
     const opcode = first & 0x0f;
     const masked = Boolean(second & 0x80);
     let length = second & 0x7f;
@@ -741,12 +751,49 @@ function decodeFrames(client, data) {
       client.socket.write(Buffer.from([0x8a, payload.length]));
       continue;
     }
-    if (opcode !== 0x1) continue;
-    try {
-      handleMessage(client, JSON.parse(payload.toString('utf8')));
-    } catch (error) {
-      send(client, 'error', { code: 'BAD_MESSAGE', message: error.message || '消息格式错误。' });
+    if (opcode === 0xA) continue;
+
+    // Browsers are allowed to fragment a large WebSocket message. This is
+    // common when the hello payload contains a custom avatar. The previous
+    // parser attempted JSON.parse on the first ~4 KB fragment, producing the
+    // misleading "Unterminated string ... position 4096" error. Reassemble
+    // continuation frames before parsing the JSON message.
+    if (opcode === 0x1) {
+      if (client.fragmentedOpcode !== null) {
+        client.close();
+        return;
+      }
+      if (fin) {
+        handleTextMessage(client, payload);
+      } else {
+        client.fragmentedOpcode = opcode;
+        client.fragmentedPayloads = [payload];
+        client.fragmentedLength = payload.length;
+      }
+      continue;
     }
+    if (opcode === 0x0) {
+      if (client.fragmentedOpcode === null) {
+        client.close();
+        return;
+      }
+      client.fragmentedPayloads.push(payload);
+      client.fragmentedLength += payload.length;
+      if (client.fragmentedLength > MAX_WS_MESSAGE_BYTES) {
+        client.close();
+        return;
+      }
+      if (fin) {
+        const message = Buffer.concat(client.fragmentedPayloads, client.fragmentedLength);
+        const messageOpcode = client.fragmentedOpcode;
+        client.fragmentedOpcode = null;
+        client.fragmentedPayloads = [];
+        client.fragmentedLength = 0;
+        if (messageOpcode === 0x1) handleTextMessage(client, message);
+      }
+      continue;
+    }
+    // Unsupported data opcodes are ignored after consuming the complete frame.
   }
 }
 
@@ -754,6 +801,9 @@ function attachWebSocket(socket) {
   const client = {
     socket,
     buffer: Buffer.alloc(0),
+    fragmentedOpcode: null,
+    fragmentedPayloads: [],
+    fragmentedLength: 0,
     closed: false,
     playerId: null,
     name: '旅人',
