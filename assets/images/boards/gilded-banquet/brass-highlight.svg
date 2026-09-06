@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="hotEdge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff0b1" stop-opacity=".08"/>
+      <stop offset=".18" stop-color="#fff0b1" stop-opacity=".72"/>
+      <stop offset=".42" stop-color="#fff7d5" stop-opacity=".18"/>
+      <stop offset=".65" stop-color="#fff0b1" stop-opacity=".76"/>
+      <stop offset="1" stop-color="#fff0b1" stop-opacity=".05"/>
+    </linearGradient>
+    <filter id="softEdge" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.2"/>
+    </filter>
+  </defs>
+  <!-- Thin, broken highlights only on raised brass; no full-surface beam. -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M92 72 H556 M980 72 H1444" stroke="url(#hotEdge)" stroke-width="3"/>
+    <path d="M92 952 H556 M980 952 H1444" stroke="url(#hotEdge)" stroke-width="3"/>
+    <path d="M72 112 V420 M72 604 V912" stroke="url(#hotEdge)" stroke-width="3"/>
+    <path d="M1464 112 V420 M1464 604 V912" stroke="url(#hotEdge)" stroke-width="3"/>
+    <path d="M96 154 C148 111 185 111 223 145 C253 171 278 181 322 161" stroke="#fff1b5" stroke-width="2.5" opacity=".9"/>
+    <path d="M1440 154 C1388 111 1351 111 1313 145 C1283 171 1258 181 1214 161" stroke="#fff1b5" stroke-width="2.5" opacity=".86"/>
+    <path d="M96 870 C148 913 185 913 223 879 C253 853 278 843 322 863" stroke="#fff1b5" stroke-width="2.5" opacity=".74"/>
+    <path d="M1440 870 C1388 913 1351 913 1313 879 C1283 853 1258 843 1214 863" stroke="#fff1b5" stroke-width="2.5" opacity=".78"/>
+  </g>
+  <g fill="none" stroke="#fff4c7" stroke-width="2" opacity=".68" filter="url(#softEdge)">
+    <circle cx="102" cy="102" r="25"/><circle cx="1434" cy="102" r="25"/>
+    <circle cx="102" cy="922" r="25"/><circle cx="1434" cy="922" r="25"/>
+  </g>
+</svg>

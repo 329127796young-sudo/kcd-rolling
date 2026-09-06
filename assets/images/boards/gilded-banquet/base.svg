@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="walnut" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6b452a"/>
+      <stop offset=".34" stop-color="#4f301f"/>
+      <stop offset=".7" stop-color="#5f3b24"/>
+      <stop offset="1" stop-color="#352016"/>
+    </linearGradient>
+    <radialGradient id="amberPool" cx="50%" cy="43%" r="72%">
+      <stop offset="0" stop-color="#d49a4b" stop-opacity=".34"/>
+      <stop offset=".55" stop-color="#9d642d" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#1b0e08" stop-opacity=".3"/>
+    </radialGradient>
+    <linearGradient id="frameGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e4bc62"/>
+      <stop offset=".34" stop-color="#a87a32"/>
+      <stop offset=".7" stop-color="#6e4a24"/>
+      <stop offset="1" stop-color="#c9973f"/>
+    </linearGradient>
+    <linearGradient id="innerWood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#70492d" stop-opacity=".7"/>
+      <stop offset=".48" stop-color="#4b2d1d" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#2c1911" stop-opacity=".55"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="45%" r="72%">
+      <stop offset=".56" stop-color="#120905" stop-opacity="0"/>
+      <stop offset="1" stop-color="#120905" stop-opacity=".44"/>
+    </radialGradient>
+    <filter id="woodNoise" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".015 .075" numOctaves="3" seed="27"/>
+      <feColorMatrix values=".42 0 0 0 .22 .18 0 0 0 .1 .08 0 0 0 .04 0 0 0 .3 0"/>
+    </filter>
+    <filter id="soften" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="1.25"/>
+    </filter>
+    <clipPath id="playingSurfaceClip">
+      <rect x="88" y="88" width="1360" height="848" rx="18"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1536" height="1024" fill="url(#walnut)"/>
+  <rect width="1536" height="1024" fill="url(#amberPool)"/>
+
+  <!-- Long but irregular walnut grain: directional enough to read as wood,
+       never regular enough to become a checker or tiled pattern. -->
+  <g fill="none" stroke-linecap="round" opacity=".27">
+    <path d="M-60 118 C160 76 272 174 475 123 S808 92 1017 139 S1320 164 1602 103" stroke="#8c5f35" stroke-width="4"/>
+    <path d="M-90 168 C148 134 302 218 494 168 S823 137 1015 181 S1318 211 1612 151" stroke="#2d1710" stroke-width="3"/>
+    <path d="M-65 286 C180 251 350 334 560 278 S890 238 1081 296 S1352 327 1605 269" stroke="#85572e" stroke-width="5"/>
+    <path d="M-92 344 C132 309 339 393 564 336 S882 304 1109 354 S1368 386 1610 323" stroke="#2b1710" stroke-width="2.4"/>
+    <path d="M-88 478 C154 432 295 515 532 468 S852 427 1075 477 S1369 522 1610 456" stroke="#80502a" stroke-width="4"/>
+    <path d="M-74 530 C182 493 340 579 586 518 S903 483 1112 535 S1374 565 1600 510" stroke="#2b1710" stroke-width="2.6"/>
+    <path d="M-66 690 C145 642 329 734 547 674 S868 629 1095 692 S1380 711 1601 661" stroke="#87562e" stroke-width="5"/>
+    <path d="M-62 744 C151 709 346 782 565 730 S873 691 1090 747 S1378 783 1607 723" stroke="#2e1810" stroke-width="2.6"/>
+    <path d="M-88 884 C174 834 314 923 544 870 S874 824 1112 878 S1381 923 1607 858" stroke="#86562e" stroke-width="4"/>
+    <path d="M-60 934 C165 898 345 972 586 923 S898 886 1117 937 S1381 964 1600 914" stroke="#2a150e" stroke-width="2.3"/>
+  </g>
+  <g fill="none" stroke="#b1773a" stroke-linecap="round" opacity=".12">
+    <path d="M-20 218 C122 188 235 239 370 210 S642 173 820 218 S1090 248 1257 208 S1439 180 1560 211" stroke-width="2"/>
+    <path d="M-30 404 C140 368 244 420 425 391 S686 358 848 403 S1119 438 1298 394 S1452 367 1570 399" stroke-width="2"/>
+    <path d="M-14 615 C141 578 287 636 449 604 S721 572 895 618 S1154 648 1324 610 S1479 582 1564 607" stroke-width="2"/>
+    <path d="M-20 818 C132 780 289 837 446 807 S712 772 895 820 S1153 850 1329 808 S1470 782 1561 812" stroke-width="2"/>
+  </g>
+
+  <!-- Warm, slightly brighter inner playing field. -->
+  <rect x="42" y="42" width="1452" height="940" rx="30" fill="#1d100a" opacity=".32"/>
+  <rect x="56" y="56" width="1424" height="912" rx="25" fill="none" stroke="url(#frameGold)" stroke-width="4" opacity=".9"/>
+  <rect x="72" y="72" width="1392" height="880" rx="21" fill="none" stroke="#e1b85c" stroke-width="1.5" opacity=".6"/>
+  <rect x="88" y="88" width="1360" height="848" rx="18" fill="url(#innerWood)" stroke="#9e6e30" stroke-width="3" opacity=".88"/>
+  <!-- wood1 is a material layer inside the authored frame, not a full-board replacement. -->
+  <image href="wood1/2K/Poliigon_WoodVeneerOak_7760_BaseColor.jpg" x="88" y="88" width="1360" height="848" preserveAspectRatio="xMidYMid slice" clip-path="url(#playingSurfaceClip)" opacity=".78"/>
+  <rect x="88" y="88" width="1360" height="848" rx="18" fill="#4c2b1b" opacity=".27" clip-path="url(#playingSurfaceClip)"/>
+  <rect x="103" y="103" width="1330" height="818" rx="14" fill="none" stroke="#e3b963" stroke-width="1" opacity=".52"/>
+
+  <!-- Two readable, lightly perspective-worn rings around the dice landing zone. -->
+  <g fill="none" stroke-linecap="round">
+    <ellipse cx="768" cy="506" rx="244" ry="188" stroke="#d9a764" stroke-width="3.2" opacity=".24"/>
+    <ellipse cx="768" cy="506" rx="326" ry="248" stroke="#9b6635" stroke-width="2.2" opacity=".22"/>
+  </g>
+  <g fill="none" stroke="#e1ae68" stroke-linecap="round" opacity=".12" filter="url(#soften)">
+    <ellipse cx="768" cy="506" rx="244" ry="188" stroke-width="7"/>
+    <ellipse cx="768" cy="506" rx="326" ry="248" stroke-width="5"/>
+  </g>
+
+  <rect width="1536" height="1024" filter="url(#woodNoise)" opacity=".26"/>
+  <rect width="1536" height="1024" fill="url(#vignette)"/>
+</svg>

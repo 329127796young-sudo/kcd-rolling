@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1d486"/>
+      <stop offset=".35" stop-color="#bb8735"/>
+      <stop offset=".7" stop-color="#6d461e"/>
+      <stop offset="1" stop-color="#d8a94f"/>
+    </linearGradient>
+    <radialGradient id="medallion">
+      <stop offset="0" stop-color="#e5bd68"/>
+      <stop offset=".55" stop-color="#9a6728"/>
+      <stop offset="1" stop-color="#4c3019"/>
+    </radialGradient>
+    <filter id="metalShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#150a04" flood-opacity=".55"/>
+    </filter>
+  </defs>
+
+  <g fill="none" stroke="url(#brass)" stroke-linecap="round" stroke-linejoin="round" filter="url(#metalShadow)" opacity=".9">
+    <path d="M96 154 C148 111 185 111 223 145 C253 171 278 181 322 161" stroke-width="5"/>
+    <path d="M1440 154 C1388 111 1351 111 1313 145 C1283 171 1258 181 1214 161" stroke-width="5"/>
+    <path d="M96 870 C148 913 185 913 223 879 C253 853 278 843 322 863" stroke-width="5"/>
+    <path d="M1440 870 C1388 913 1351 913 1313 879 C1283 853 1258 843 1214 863" stroke-width="5"/>
+    <path d="M597 99 C633 73 660 73 684 95 C704 112 723 118 752 105" stroke-width="4" opacity=".72"/>
+    <path d="M939 99 C903 73 876 73 852 95 C832 112 813 118 784 105" stroke-width="4" opacity=".72"/>
+    <path d="M597 925 C633 951 660 951 684 929 C704 912 723 906 752 919" stroke-width="4" opacity=".72"/>
+    <path d="M939 925 C903 951 876 951 852 929 C832 912 813 906 784 919" stroke-width="4" opacity=".72"/>
+  </g>
+
+  <g fill="url(#medallion)" stroke="#e4bd69" stroke-width="2" filter="url(#metalShadow)">
+    <circle cx="102" cy="102" r="25"/><circle cx="1434" cy="102" r="25"/>
+    <circle cx="102" cy="922" r="25"/><circle cx="1434" cy="922" r="25"/>
+  </g>
+  <g fill="none" stroke="#4a2d16" stroke-width="3" opacity=".9">
+    <path d="M102 84 L102 120 M84 102 L120 102"/>
+    <path d="M1434 84 L1434 120 M1416 102 L1452 102"/>
+    <path d="M102 904 L102 940 M84 922 L120 922"/>
+    <path d="M1434 904 L1434 940 M1416 922 L1452 922"/>
+  </g>
+  <g fill="#e0b45a" opacity=".86">
+    <circle cx="102" cy="102" r="4"/><circle cx="1434" cy="102" r="4"/>
+    <circle cx="102" cy="922" r="4"/><circle cx="1434" cy="922" r="4"/>
+  </g>
+</svg>

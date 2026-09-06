@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1536" height="1024" viewBox="0 0 1536 1024" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="wine" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#32100c" stop-opacity=".42"/>
+      <stop offset=".62" stop-color="#5a2119" stop-opacity=".18"/>
+      <stop offset="1" stop-color="#5a2119" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="4"/></filter>
+  </defs>
+  <g filter="url(#blur)">
+    <ellipse cx="180" cy="188" rx="84" ry="34" fill="url(#wine)" transform="rotate(-12 180 188)"/>
+    <ellipse cx="1314" cy="224" rx="72" ry="29" fill="url(#wine)" transform="rotate(18 1314 224)"/>
+    <ellipse cx="1382" cy="824" rx="92" ry="38" fill="url(#wine)" transform="rotate(-16 1382 824)"/>
+    <ellipse cx="252" cy="850" rx="66" ry="28" fill="url(#wine)" transform="rotate(11 252 850)"/>
+  </g>
+  <g fill="none" stroke-linecap="round">
+    <path d="M175 204 C214 197 250 207 283 198" stroke="#260f09" stroke-width="3" opacity=".32"/>
+    <path d="M1270 258 C1312 246 1345 252 1384 238" stroke="#2a110b" stroke-width="2" opacity=".28"/>
+    <path d="M230 789 C276 780 304 793 348 779" stroke="#e0ad68" stroke-width="2" opacity=".14"/>
+    <path d="M1136 896 C1190 880 1240 895 1296 875" stroke="#261009" stroke-width="3" opacity=".24"/>
+    <path d="M422 122 C460 114 490 120 526 112" stroke="#e4b76d" stroke-width="2" opacity=".1"/>
+    <path d="M910 916 C952 903 984 912 1026 900" stroke="#e0ad68" stroke-width="2" opacity=".1"/>
+  </g>
+  <g fill="none" stroke="#1f0e08" opacity=".2">
+    <ellipse cx="1160" cy="184" rx="54" ry="21" stroke-width="2"/>
+    <ellipse cx="1160" cy="184" rx="43" ry="16" stroke-width="1"/>
+    <ellipse cx="370" cy="874" rx="45" ry="17" stroke-width="2"/>
+  </g>
+</svg>

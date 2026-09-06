@@ -1,0 +1,53 @@
+{
+  "defaultTheme": "tavern-oak",
+  "themes": [
+    {
+      "id": "tavern-oak",
+      "name": "墙洞酒馆 · 旧橡木",
+      "status": "默认棋盘",
+      "base": "tavern-oak/base.webp",
+      "wear": "tavern-oak/wear.png",
+      "accent": "#d2b96a",
+      "enabled": true
+    },
+    {
+      "id": "noble-hall",
+      "name": "贵族大厅 · 胡桃木",
+      "status": "可使用",
+      "base": "noble-hall/base.webp",
+      "wear": "noble-hall/wear.png",
+      "accent": "#c7b59b",
+      "enabled": true
+    },
+    {
+      "id": "gilded-banquet",
+      "name": "金穗宴厅 · 胡桃鎏金桌",
+      "status": "新棋盘 · 可使用",
+      "base": "gilded-banquet/base.svg",
+      "woodBase": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_BaseColor.jpg",
+      "textureMaps": {
+        "normal": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_Normal.png",
+        "roughness": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_Roughness.jpg",
+        "displacement": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_Displacement.tiff",
+        "ambientOcclusion": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_AmbientOcclusion.jpg",
+        "metallic": "gilded-banquet/wood1/2K/Poliigon_WoodVeneerOak_7760_Metallic.jpg"
+      },
+      "wear": "gilded-banquet/wear.svg",
+      "ornaments": "gilded-banquet/ornaments.svg",
+      "highlight": "gilded-banquet/brass-highlight.svg",
+      "accent": "#d8ae58",
+      "accentRgb": "216, 174, 88",
+      "lightProfile": "bright-banquet",
+      "enabled": true
+    },
+    {
+      "id": "castle-feast",
+      "name": "城堡宴席 · 石木桌",
+      "status": "后续加入",
+      "base": "castle-feast/base.webp",
+      "wear": "castle-feast/wear.png",
+      "accent": "#b7a47b",
+      "enabled": false
+    }
+  ]
+}
