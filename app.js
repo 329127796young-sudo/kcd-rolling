@@ -3498,11 +3498,30 @@ function sendOnlineAction(action) {
   return window.multiplayerClient.sendGameAction(action);
 }
 
+// The online server resets a player's dice state immediately after a bank or
+// farkle.  The 3D layer is intentionally persistent, though, so a state
+// snapshot by itself is not enough to hide the previous throw.  Reconcile the
+// visual owner pools whenever a snapshot says a seat no longer has an active
+// throw; otherwise dice from both seats remain as stale meshes on the table
+// and appear to accumulate across turns.
+function syncOnlineDiceVisuals(local, remote) {
+  const hasVisibleThrow = (player) => Boolean(
+    player && (
+      player.hasRolled === true
+      || (Array.isArray(player.activeIndices) && player.activeIndices.length > 0)
+      || (Array.isArray(player.locked) && player.locked.length > 0)
+    )
+  );
+  if (!hasVisibleThrow(local)) dicePhysics3D.resetOwner?.('player');
+  if (!hasVisibleThrow(remote)) dicePhysics3D.resetOwner?.('opponent');
+}
+
 function applyOnlineSnapshot(snapshot) {
   if (!snapshot || !Array.isArray(snapshot.players) || state.onlineSeat === null) return false;
   const local = snapshot.players[state.onlineSeat];
   const remote = snapshot.players.find((player) => player && player.seat !== state.onlineSeat);
   if (!local || !remote) return false;
+  syncOnlineDiceVisuals(local, remote);
   state.mode = 'online';
   state.onlineStateVersion = Number(snapshot.stateVersion) || state.onlineStateVersion || 0;
   state.playerTotal = Number(local.total) || 0;
@@ -3576,6 +3595,10 @@ function animateOnlineRoll(detail) {
       safeAudio('playFarkle');
       addActivity(ownerIsPlayer ? 'ai' : 'you', `<b>${ownerIsPlayer ? '爆骰' : '对手爆骰'}</b> · 本轮暂存分数归零`, '本轮结束');
       showToast(ownerIsPlayer ? '爆骰！本轮分数归零' : '在线牌友爆骰 · 轮到你');
+      // A farkle also resets the server seat immediately.  Clear the visual
+      // pool after the reveal so the failed throw does not remain as a stale
+      // pile when the turn passes to the other player.
+      dicePhysics3D.resetOwner?.(owner);
     }
     updateUI();
   };
@@ -3611,6 +3634,10 @@ function handleOnlineGameEvent(detail) {
   applyOnlineSnapshot(detail.state);
   if (event.type === 'bank') {
     const amount = Number(event.banked) || 0;
+    // Keep this explicit in addition to snapshot reconciliation: bank is the
+    // authoritative end of a seat's throw and must remove every visible die
+    // before the other seat begins rolling.
+    dicePhysics3D.resetOwner?.(ownerIsPlayer ? 'player' : 'opponent');
     spawnScoreFloat(amount, ownerIsPlayer ? els.playerTotal : els.opponentRight, 'gain', { tier: 'bank', owner: ownerIsPlayer ? 'player' : 'opponent', label: ownerIsPlayer ? '本轮收分' : '对手收分' });
     safeAudio('playBank', amount);
     celebrateStage();
@@ -3647,6 +3674,8 @@ function finishOnlineMatch(winnerSeat, settlement = null) {
   state.match.active = false;
   state.match.online = true;
   state.match.result = winnerIsPlayer ? 'player' : 'opponent';
+  dicePhysics3D.resetOwner?.('player');
+  dicePhysics3D.resetOwner?.('opponent');
   els.ritual?.classList.remove('active');
   updateUI();
   if (winnerIsPlayer) { safeAudio('playWin'); celebrateStage(); } else { safeAudio('playFarkle'); shakeStage(); }
