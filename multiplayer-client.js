@@ -42,6 +42,8 @@
       this.playerId = null;
       this.profile = null;
       this.connected = false;
+      this.identified = false;
+      this.pendingMessages = [];
       this.pendingOpen = false;
       this.buildUi();
       window.addEventListener('beforeunload', () => this.disconnect());
@@ -133,6 +135,9 @@
       this.backdrop.classList.add('hidden');
       document.body.classList.remove('hub-modal-open');
       this.pendingOpen = false;
+      // Do not create or join a room after the player has already closed the
+      // lobby while the identity handshake was still in flight.
+      this.pendingMessages = this.pendingMessages.filter(({ type }) => !['lobby:list', 'room:create', 'room:join'].includes(type));
     }
 
     connect() {
@@ -151,7 +156,9 @@
       this.setStatus('正在连接', '正在连接本地牌桌服务器……', 'pending');
       this.socket.addEventListener('open', () => {
         this.connected = true;
-        this.setStatus('已连接', '本地牌桌服务器在线', 'ok');
+        this.identified = false;
+        this.setStatus('正在建立身份', '正在同步玩家档案……', 'pending');
+        this.render();
         this.playerId = readPlayerId();
         this.send('hello', {
           playerId: this.playerId,
@@ -166,6 +173,8 @@
       });
       this.socket.addEventListener('close', () => {
         this.connected = false;
+        this.identified = false;
+        this.pendingMessages = [];
         this.setStatus('已断开', '本地服务器已停止或网络已断开。', 'error');
         this.render();
       });
@@ -176,15 +185,33 @@
       try { this.socket?.close(); } catch { /* noop */ }
       this.socket = null;
       this.connected = false;
+      this.identified = false;
+      this.pendingMessages = [];
     }
 
     send(type, payload = {}) {
-      if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+      const socketState = this.socket?.readyState;
+      if (!this.socket || (socketState !== WebSocket.OPEN && socketState !== WebSocket.CONNECTING)) {
         this.setStatus('尚未连接', '请先启动本地服务器。', 'error');
         return false;
       }
+      // The server intentionally rejects every message except `hello` until
+      // the browser identity has been established. Queue early lobby clicks
+      // so a normal network handshake cannot produce NOT_IDENTIFIED.
+      if (type !== 'hello' && (!this.connected || !this.identified || socketState !== WebSocket.OPEN)) {
+        if (type === 'lobby:list') this.pendingMessages = this.pendingMessages.filter((message) => message.type !== 'lobby:list');
+        this.pendingMessages.push({ type, payload });
+        if (!this.identified) this.setStatus('正在建立身份', '正在同步玩家档案，请稍候……', 'pending');
+        return true;
+      }
       this.socket.send(JSON.stringify({ type, ...payload }));
       return true;
+    }
+
+    flushPendingMessages() {
+      if (!this.identified || !this.socket || this.socket.readyState !== WebSocket.OPEN) return;
+      const pending = this.pendingMessages.splice(0);
+      pending.forEach(({ type, payload }) => this.send(type, payload));
     }
 
     syncProfile(snapshot) { return this.send('profile:sync', { snapshot }); }
@@ -241,10 +268,14 @@
     handleMessage(message) {
       if (message.type === 'hello:ok') {
         this.playerId = message.playerId || this.playerId || readPlayerId();
+        this.identified = true;
+        this.setStatus('已连接', '玩家身份已建立 · 牌桌服务器在线', 'ok');
         if (message.profile) {
           this.profile = message.profile;
           document.dispatchEvent(new CustomEvent('wht:online-profile', { detail: { profile: message.profile, source: 'hello' } }));
         }
+        this.render();
+        this.flushPendingMessages();
         return;
       }
       if (message.type === 'profile:state') {
@@ -310,6 +341,12 @@
 
     render() {
       if (!this.roomList) return;
+      const identityReady = this.connected && this.identified;
+      if (this.createButton) this.createButton.disabled = !identityReady;
+      if (this.joinButton) this.joinButton.disabled = !identityReady;
+      if (this.refreshButton) this.refreshButton.disabled = !identityReady;
+      if (this.roomCodeInput) this.roomCodeInput.disabled = !identityReady;
+      if (this.matchType) this.matchType.disabled = !identityReady || Boolean(this.room);
       if (!this.rooms.length) this.roomList.innerHTML = '<div class="online-empty-state">暂时没有开放牌桌，创建一张试试。</div>';
       else this.roomList.innerHTML = this.rooms.map((room) => `<button type="button" class="online-room-row" data-room-id="${room.roomId}"><span><b>${room.roomId}</b><small>${room.hostName} · ${room.matchType === 'stake' ? '正式赌局' : '练习桌'}</small></span><i>${room.playerCount}/2 · 加入</i></button>`).join('');
       this.roomList.querySelectorAll('[data-room-id]').forEach((button) => button.addEventListener('click', () => this.joinRoom(button.dataset.roomId)));
